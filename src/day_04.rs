@@ -11,6 +11,8 @@ struct BingoBoard {
     columns_index: [usize; i8::MAX as usize],
 
     draw_sum: i64,
+
+    has_won: bool,
 }
 
 impl Default for BingoBoard {
@@ -25,11 +27,13 @@ impl Default for BingoBoard {
             columns_index: [0xBADCAFE; i8::MAX as usize],
 
             draw_sum: 0,
+
+            has_won: false,
         }
     }
 }
 
-pub fn day_4_part_1(data: &str) -> i64 {
+fn day_4_core_algorithm(data: &str, part_2_mode: bool) -> i64 {
     let mut lines = data.lines();
 
     let first_line = lines.next().expect("Could not read first line");
@@ -77,27 +81,42 @@ pub fn day_4_part_1(data: &str) -> i64 {
         boards.push(board);
     }
 
+    let number_of_boards = boards.len();
+    let mut number_of_winning_boards = 0;
+
     for draw_number in first_line_digits {
         for board in &mut boards {
+            if part_2_mode && board.has_won {
+                continue;
+            }
             let index = draw_number as usize;
             let line_index = board.lines_index[index];
-            if line_index != 0xBADCAFE {
-                board.draw_sum += draw_number as i64;
+            if line_index == 0xBADCAFE {
+                continue;
+            }
+            board.draw_sum += draw_number as i64;
 
-                board.lines[line_index] += 1;
-                let column_index = board.columns_index[index];
-                board.columns[column_index] += 1;
+            board.lines[line_index] += 1;
+            let column_index = board.columns_index[index];
+            board.columns[column_index] += 1;
 
-                if board.lines[line_index] == 5 || board.columns[column_index] == 5 {
-                    let total_sum = board
-                        .data
-                        .iter()
-                        .map(|x| {
-                            x.iter()
-                                .map(|n| i64::try_from(*n).expect("ah"))
-                                .sum::<i64>()
-                        })
-                        .sum::<i64>();
+            if board.lines[line_index] == 5 || board.columns[column_index] == 5 {
+                let total_sum = board
+                    .data
+                    .iter()
+                    .map(|x| {
+                        x.iter()
+                            .map(|n| i64::try_from(*n).expect("ah"))
+                            .sum::<i64>()
+                    })
+                    .sum::<i64>();
+                if part_2_mode {
+                    board.has_won = true;
+                    number_of_winning_boards += 1;
+                    if number_of_winning_boards == number_of_boards {
+                        return (total_sum - board.draw_sum) * draw_number as i64;
+                    }
+                } else {
                     return (total_sum - board.draw_sum) * draw_number as i64;
                 }
             }
@@ -106,8 +125,12 @@ pub fn day_4_part_1(data: &str) -> i64 {
     panic!("No solution found");
 }
 
+pub fn day_4_part_1(data: &str) -> i64 {
+    return day_4_core_algorithm(data, false);
+}
+
 pub fn day_4_part_2(data: &str) -> i64 {
-    return 0;
+    return day_4_core_algorithm(data, true);
 }
 
 #[cfg(test)]
@@ -141,6 +164,6 @@ mod tests {
 
     #[test]
     fn test_day_4_part_2() {
-        assert_eq!(day_4_part_2(EXAMPLE), 5);
+        assert_eq!(day_4_part_2(EXAMPLE), 1924);
     }
 }

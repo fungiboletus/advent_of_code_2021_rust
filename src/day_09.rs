@@ -1,6 +1,5 @@
-use std::collections::BinaryHeap;
-
 use ndarray::Array2;
+use std::collections::BinaryHeap;
 
 fn parse_data(data: &str) -> Array2<u8> {
     let data: Vec<Vec<u8>> = data
@@ -45,6 +44,9 @@ pub fn day_9_part_2(data: &str) -> i64 {
     let data = parse_data(data);
     let dim = data.dim();
     let mut basins: Array2<usize> = Array2::zeros(dim);
+
+    // I could use a recursive function but I want to play with heap data structures now
+    // to avoid stack overflows during the next days.
     let mut heap: BinaryHeap<(usize, (usize, usize))> = BinaryHeap::new();
 
     // Make sure that we visit all the locations by adding them in the heap
@@ -68,35 +70,36 @@ pub fn day_9_part_2(data: &str) -> i64 {
             continue;
         }
 
-        let mut new_basin_id = basin_id;
+        let mut current_basin_id = basin_id;
         if basin_id == 0 {
             // We found a new basin
             nb_basins += 1;
-            new_basin_id = nb_basins;
+            current_basin_id = nb_basins;
         }
 
+        // Debugging with println is sometimes nicer than the debugger
         //println!("{:?}", ((i, j), basin_id, new_basin_id));
         //println!("{:?}", basins);
         //println!("----");
 
         // Mark the location as part of a basin
-        basins[(i, j)] = new_basin_id;
+        basins[(i, j)] = current_basin_id;
 
         // Increment the counter for the basin
-        basins_counters[new_basin_id] += 1;
+        basins_counters[current_basin_id] += 1;
 
         // Check the neighbours
         if i > 0 && data[(i - 1, j)] != 9 && basins[(i - 1, j)] == 0 {
-            heap.push((new_basin_id, (i - 1, j)));
+            heap.push((current_basin_id, (i - 1, j)));
         }
         if i < dim.0 - 1 && data[(i + 1, j)] != 9 && basins[(i + 1, j)] == 0 {
-            heap.push((new_basin_id, (i + 1, j)));
+            heap.push((current_basin_id, (i + 1, j)));
         }
         if j > 0 && data[(i, j - 1)] != 9 && basins[(i, j - 1)] == 0 {
-            heap.push((new_basin_id, (i, j - 1)));
+            heap.push((current_basin_id, (i, j - 1)));
         }
         if j < dim.1 - 1 && data[(i, j + 1)] != 9 && basins[(i, j + 1)] == 0 {
-            heap.push((new_basin_id, (i, j + 1)));
+            heap.push((current_basin_id, (i, j + 1)));
         }
     }
 
@@ -104,14 +107,14 @@ pub fn day_9_part_2(data: &str) -> i64 {
     let mut non_empty_basins_counters = basins_counters
         .iter()
         .filter(|x| **x > 0)
-        .map(|x| *x as usize)
-        .collect::<Vec<usize>>();
+        .map(|x| *x as i64)
+        .collect::<Vec<i64>>();
     non_empty_basins_counters.sort_unstable();
     return non_empty_basins_counters
         .iter()
         .rev()
         .take(3)
-        .product::<usize>() as i64;
+        .product::<i64>();
 }
 
 #[cfg(test)]

@@ -26,7 +26,9 @@ fn step(data: &mut Array2<i64>) -> i64 {
                 let energy = data[(i, j)];
                 // If a boom is detected
                 if energy > 9 {
-                    data[(i, j)] = -123456789;
+                    // Use a large negative number to mark the cell as a boom
+                    // The idea is to not have them explode twice in the step
+                    data[(i, j)] = -0xDEADBEEF;
                     did_boom = true;
                     nb_booms += 1;
 
@@ -45,7 +47,7 @@ fn step(data: &mut Array2<i64>) -> i64 {
             }
         }
         if !did_boom {
-            // Time to cleanup
+            // Time to cleanup the cells that exploded (back to 0)
             for energy in data.iter_mut() {
                 if *energy < 0 {
                     *energy = 0;

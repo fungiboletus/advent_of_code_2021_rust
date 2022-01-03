@@ -17,7 +17,7 @@ fn compute_error_score(instructions: Chars) -> (i64, Option<Vec<char>>) {
                         ']' => return (57, None),
                         '}' => return (1197, None),
                         '>' => return (25137, None),
-                        _ => panic!("That shouldn't happen but anyway"),
+                        _ => unreachable!(),
                     }
                 }
             }
